@@ -1,4 +1,4 @@
-# SecureChat - End-to-End Encrypted Messaging App
+# SunnyChat - End-to-End Encrypted Messaging App
 
 A modern, secure real-time chat application with end-to-end encryption, built with React and Node.js.
 
