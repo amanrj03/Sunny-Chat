@@ -26,17 +26,36 @@ const ChatInterface = ({ userId, onBack }: ChatInterfaceProps) => {
   const [showUserDetails, setShowUserDetails] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Load other user details first, then messages
   useEffect(() => {
-    loadMessages();
+    const init = async () => {
+      try {
+        const user = await api.getUserDetails(userId);
+        setOtherUser(user);
+      } catch (error) {
+        console.error('Failed to load user details:', error);
+      }
+    };
+    init();
     checkBlockStatus();
-    loadOtherUserDetails();
+  }, [userId]);
+
+  // Load messages only after otherUser is available
+  useEffect(() => {
+    if (otherUser?.publicKey) {
+      loadMessages();
+    }
+  }, [otherUser?.publicKey, userId]);
+
+  useEffect(() => {
+    if (!otherUser?.publicKey) return;
 
     const unsubscribe = wsService.onMessage((data) => {
       if (data.type === 'new_message' && data.message.senderId === userId) {
         try {
           const decryptedContent = encryptionService.decrypt(
             data.message.content, 
-            data.message.sender?.publicKey || otherUser?.publicKey
+            data.message.sender?.publicKey || otherUser.publicKey
           );
           setMessages(prev => [...prev, { ...data.message, content: decryptedContent }]);
         } catch (error) {
@@ -46,8 +65,7 @@ const ChatInterface = ({ userId, onBack }: ChatInterfaceProps) => {
       }
       if (data.type === 'message_sent') {
         try {
-          // For my own sent messages, use RECIPIENT's public key (otherUser)
-          const decryptedContent = encryptionService.decrypt(data.message.content, otherUser?.publicKey);
+          const decryptedContent = encryptionService.decrypt(data.message.content, otherUser.publicKey);
           setMessages(prev => [...prev, { ...data.message, content: decryptedContent }]);
         } catch (error) {
           console.error('Decryption error:', error);
@@ -57,7 +75,7 @@ const ChatInterface = ({ userId, onBack }: ChatInterfaceProps) => {
     });
 
     return unsubscribe;
-  }, [userId, otherUser]);
+  }, [userId, otherUser?.publicKey]);
 
   useEffect(() => {
     scrollToBottom();
@@ -101,14 +119,6 @@ const ChatInterface = ({ userId, onBack }: ChatInterfaceProps) => {
     }
   };
 
-  const loadOtherUserDetails = async () => {
-    try {
-      const user = await api.getUserDetails(userId);
-      setOtherUser(user);
-    } catch (error) {
-      console.error('Failed to load user details:', error);
-    }
-  };
 
   const checkBlockStatus = async () => {
     try {

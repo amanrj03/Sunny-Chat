@@ -81,19 +81,24 @@ A modern, secure real-time chat application with end-to-end encryption, built wi
 
 ### Frontend Setup
 
-1. **Install dependencies:**
+1. **Navigate to frontend folder:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Configure API URL:**
+3. **Configure API URL:**
    Update the API URL in `src/services/api.ts` and `src/services/websocket.ts`:
    ```typescript
    const API_URL = 'http://localhost:3001/api';  // or your deployed backend URL
    const WS_URL = 'ws://localhost:3001';
    ```
 
-3. **Start development server:**
+4. **Start development server:**
    ```bash
    npm run dev
    ```
